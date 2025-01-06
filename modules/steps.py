@@ -2,30 +2,58 @@ import modules.parsing as p
 import modules.classes as c
 from modules.app_state import AppState
 import modules.io as io
+
 def init(app: AppState):
-    print("Please enter the password")
-    check_password(input(), app)
+    welcome_options_menu(app)
 
-def check_password(string, app: AppState):
-    if string == app.app_password:
-        present_options(app)
+def check_password(app: AppState):
+    print("Type in the password")
+    string = input()
+    app.uup_list = p.encrypted_contents_to_list(app.encrypted_file_contents, string)
+    if app.uup_list or app.app_password == string:
+        app.app_password = string
+        print("Password is correct.\n")
+        app_options_menu(app)
     else:
-        print("Incorrect password")
-        init(app)
+        print("No content was unlocked with that password.")
+        welcome_options_menu(app)
 
-def present_options(app: AppState):
-    print("Type in a letter to select an option:\n"
+def new_password(app: AppState):
+    print("Enter a new password for this app and delete all saved passwords. Close the app now to retain all saved passwords.")
+    app.app_password = input()
+    welcome_options_menu(app)
+
+def welcome_options_menu(app: AppState):
+    print("Welcome to the app.\n"
+          + "Type a letter to select an option:\n"
+          +"\t(T)ype in the password for this app\n"
+          + "\t(E)rase all saved passwords and set a new password for this app"
+          )
+    welcome_options(input(), app)
+
+def welcome_options(string, app: AppState):
+    string = string.upper()
+    if string == "T":
+        check_password(app)
+        return
+    if string == "E":
+        new_password(app)
+        return
+
+def app_options_menu(app: AppState):
+    print("Type a letter to select an option:\n"
           + "\t(L)ist all saved passwords\n"
           + "\t(A)dd a password\n"
-          + "\t(U)pdate a password\n"
-          + "\t(D)elete a password\n"
-          + "\t(C)ommit changes\n"
+          + "\t(U)pdate a saved password\n"
+          + "\t(D)elete a saved password\n"
+          + "\t(C)ommit changes and save to file\n"
+          + "\t(S)et a new password for this app\n"
           )
-    options(input(), app)
+    app_options(input(), app)
 
 def complete_step(string, app: AppState):
     print(string + "\n")
-    present_options(app)
+    app_options_menu(app)
 
 def list_pw(app: AppState):
     if len(app.uup_list) > 0:
@@ -70,11 +98,16 @@ def delete_pw(app: AppState):
     else: complete_step("URL not in the list.", app)
 
 def commit_pw(app: AppState):
-    io.save_file(app.pw_filename, app.uup_list, app.app_password)
-    #io.save_encrypted_file(app.pw_filename, app.uup_list, app.app_password)
+    io.save_encrypted_file(app.pw_filename, app.uup_list, app.app_password)
     complete_step("Changes have been committed.", app)
 
-def options(string, app: AppState):
+def change_app_pw(app: AppState):
+    print("Enter the the new password for this app: ")
+    app.app_password = input()
+    io.save_encrypted_file(app.pw_filename, app.uup_list, app.app_password)
+    complete_step("Password has been changed.", app)
+
+def app_options(string, app: AppState):
     string = string.upper()
     if string == "L":
         list_pw(app)
@@ -90,5 +123,8 @@ def options(string, app: AppState):
         return
     if string == "C":
         commit_pw(app)
+        return
+    if string == "S":
+        change_app_pw(app)
         return
     print(string + " is not an option")
