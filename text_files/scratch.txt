@@ -247,3 +247,23 @@ check_password(input())
 #
 # decrypted_message = decrypt_message(encrypted_message, password)
 # print("Decrypted:", decrypted_message)
+
+###############################
+[
+    {
+        "url":"amazon.com",
+        "username":"SteveQ",
+        "password":"LoveAmazon333"
+    },
+    {
+        "url":"dell.com",
+        "username":"SteveQ",
+        "password":"LoveDell333"
+    },
+    {
+        "url":"netflix.com",
+        "username":"SteveQ27",
+        "password":"LoveNetflix333"
+    }
+]
+when passwords.txt is empty, there is an error

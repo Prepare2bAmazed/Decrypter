@@ -1,13 +1,17 @@
 import modules.parsing as p
 import modules.classes as c
 from modules.app_state import AppState
-
-def init():
+import modules.io as io
+def init(app: AppState):
     print("Please enter the password")
+    check_password(input(), app)
 
 def check_password(string, app: AppState):
     if string == app.app_password:
         present_options(app)
+    else:
+        print("Incorrect password")
+        init(app)
 
 def present_options(app: AppState):
     print("Type in a letter to select an option:\n"
@@ -24,8 +28,10 @@ def complete_step(string, app: AppState):
     present_options(app)
 
 def list_pw(app: AppState):
-    p.print_uup_list(app.uup_list)
-    complete_step("Passwords retrieved successfully.", app)
+    if len(app.uup_list) > 0:
+        p.print_uup_list(app.uup_list)
+        complete_step("Passwords retrieved successfully.", app)
+    else: complete_step("No passwords are currently saved", app)
 
 def add_pw(app: AppState):
     print("Enter the URL: ")
@@ -64,8 +70,8 @@ def delete_pw(app: AppState):
     else: complete_step("URL not in the list.", app)
 
 def commit_pw(app: AppState):
-    with open(app.pw_filename, "w") as s:
-        s.write(p.uup_list_to_json(app.uup_list))
+    io.save_file(app.pw_filename, app.uup_list)
+    #io.save_encrypted_file(app.pw_filename, app.uup_list, app.app_password)
     complete_step("Changes have been committed.", app)
 
 def options(string, app: AppState):

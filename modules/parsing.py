@@ -2,12 +2,17 @@ import json
 import modules.classes as c
 
 def json_to_uup_list(json_string):
-    parsed_json = json.loads(json_string)
-    domain_user_pass_list = []
+    parsed_json = []
+    try:
+        parsed_json = json.loads(json_string)
+    except ValueError:
+        return parsed_json
+
+    url_user_pass_list = []
     for j in parsed_json:
-        domain_user_pass = c.UrlUserPass(j["url"], j["username"], j["password"])
-        domain_user_pass_list.append(domain_user_pass)
-    return domain_user_pass_list
+        url_user_pass = c.UrlUserPass(j["url"], j["username"], j["password"])
+        url_user_pass_list.append(url_user_pass)
+    return url_user_pass_list
 
 def uup_list_to_json(uup_list):
     return json.dumps(uup_list, default=lambda o: o.__dict__)
