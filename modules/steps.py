@@ -70,7 +70,7 @@ def delete_pw(app: AppState):
     else: complete_step("URL not in the list.", app)
 
 def commit_pw(app: AppState):
-    io.save_file(app.pw_filename, app.uup_list)
+    io.save_file(app.pw_filename, app.uup_list, app.app_password)
     #io.save_encrypted_file(app.pw_filename, app.uup_list, app.app_password)
     complete_step("Changes have been committed.", app)
 

@@ -5,4 +5,4 @@ class AppState:
         self.pw_filename = pw_filename
         self.starting_filename = starting_filename
         self.app_password = app_password
-        self.uup_list = io.load_file(pw_filename)
+        self.uup_list = io.load_file(pw_filename, app_password)
