@@ -1,0 +1,249 @@
+# from modules.Writers import hello_world as m
+# m("steve")
+#wr.hello_world("steve")
+
+# test_json = '[{"url": "borders.com", "username": "jrh221", "password": "123abc"}]'
+# test_json_multiple = '[{"url": "borders.com", "username": "jrh221", "password": "123abc"},{"url": "waldens.com", "username": "jrh890", "password": "123abc"}]'
+# test_input = DomainUserPass("bestbuy.com", "jrh", "123abc")
+
+
+############################################################################
+import json
+import modules.writers as wr
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+###########################################################################
+#Parsing stuff
+
+class UrlUserPass:
+    def __init__(self, url, username, password):
+        self.url = url
+        self.username = username
+        self.password = password
+    def  to_json (self) -> str:
+        return json.dumps(self, default=lambda o: o.__dict__)
+
+def json_to_uup_list(json_string):
+    parsed_json = json.loads(json_string)
+    domain_user_pass_list = []
+    for j in parsed_json:
+        domain_user_pass = UrlUserPass(j["url"], j["username"], j["password"])
+        domain_user_pass_list.append(domain_user_pass)
+    return domain_user_pass_list
+
+def uup_list_to_json(uup_list):
+    return json.dumps(uup_list, default=lambda o: o.__dict__)
+
+dividing_line = "-" * 50
+
+def print_uup_list(uup_list):
+    print(dividing_line)
+    sorted_list = sorted(uup_list, key=lambda UrlUserPass: UrlUserPass.url )
+    for uup in sorted_list:
+        print("URL: " + uup.url)
+        print("Username: " + uup.username)
+        print("Password: " + uup.password)
+        print(dividing_line)
+
+#############################################################################
+#state stuff
+
+pw_filename = "text_files/passwords.txt"
+starting_filename = "text_files/starting_data.json"
+
+
+def init_pw_list(pw_filename):
+    with open(pw_filename) as pwf:
+        return json_to_uup_list(pwf.read())
+
+#change to pw filename
+uup_list = init_pw_list(starting_filename)
+
+##############################################################################
+# Step stuff
+
+def init():
+    print("Please enter the password")
+
+def check_password(string):
+    get_pass = "eggs"
+    if string == get_pass:
+        present_options()
+
+def present_options():
+    print("Type in a letter to select an option:\n"
+          + "\t(L)ist all saved passwords\n"
+          + "\t(A)dd a password\n"
+          + "\t(U)pdate a password\n"
+          + "\t(D)elete a password\n"
+          + "\t(C)ommit changes\n"
+          )
+    options(input())
+
+def complete_step(string):
+    print(string + "\n")
+    present_options()
+
+def list_pw():
+    print_uup_list(uup_list)
+    complete_step("Passwords retrieved successfully.")
+
+def add_pw():
+    print("Enter the URL: ")
+    url = input()
+    global uup_list
+    already_in_list: bool = len(list(filter(lambda uup: uup.url.upper() == url.upper(), uup_list))) >= 1
+    if not already_in_list:
+        print("Enter the username: ")
+        username = input()
+        print("Enter the password: ")
+        password = input()
+        uup_list.append(UrlUserPass(url, username, password))
+        complete_step("Password has been added.")
+    else: complete_step("URL is already in the list.")
+
+def update_pw():
+    print("Enter the URL of the password to be updated: ")
+    url = input()
+    global uup_list
+    already_in_list: bool = len(list(filter(lambda uup: uup.url.upper() == url.upper(), uup_list))) >= 1
+    if already_in_list:
+        print("Enter the updated username: ")
+        username = input()
+        print("Enter the updated password: ")
+        password = input()
+        uup_list = list(filter(lambda uup: uup.url.upper() != url.upper(), uup_list))
+        uup_list.append(UrlUserPass(url, username, password))
+        complete_step("Password has been updated.")
+    else: complete_step("URL not in the list.")
+
+def delete_pw():
+    print("Enter the URL of the password to be deleted: ")
+    url= input()
+    global uup_list
+    new_uup_list = list(filter(lambda uup: uup.url.upper() != url.upper(), uup_list))
+    if len(uup_list) > len(new_uup_list):
+        uup_list = new_uup_list
+        complete_step("Password has been deleted.")
+    else: complete_step("URL not in the list.")
+
+def commit_pw():
+    global pw_filename
+    global uup_list
+    with open(pw_filename, "w") as s:
+        s.write(uup_list_to_json(uup_list))
+    complete_step("Changes have been committed.")
+
+def options(string):
+    string = string.upper()
+    if string == "L":
+        list_pw()
+        return
+    if string == "A":
+        add_pw()
+        return
+    if string == "U":
+        update_pw()
+        return
+    if string == "D":
+        delete_pw()
+        return
+    if string == "C":
+        commit_pw()
+        return
+    print(string + " is not an option")
+
+#############################################################
+#run the app
+
+init()
+check_password(input())
+#todo
+#encrypt
+#symbols in password
+#split files and deal with scoping
+#error handling
+
+# def derive_key(password: str, salt: bytes) -> bytes:
+#     """Derive a key from a password and salt using PBKDF2."""
+#     kdf = PBKDF2HMAC(
+#         algorithm=hashes.SHA256(),
+#         length=32,
+#         salt=salt,
+#         iterations=100000,
+#     )
+#     return kdf.derive(password.encode())
+#
+# def encrypt_message(message: str, password: str) -> bytes:
+#     """Encrypt a message using a password."""
+#     salt = Fernet.generate_key()  # Generate a random salt
+#     key = derive_key(password, salt)
+#     f = Fernet(key)
+#     encrypted_message = f.encrypt(message.encode())
+#     return salt + encrypted_message
+#
+# def decrypt_message(encrypted_message: bytes, password: str) -> str:
+#     """Decrypt a message using a password."""
+#     salt = encrypted_message[:32]  # Extract the salt
+#     encrypted_message = encrypted_message[32:]
+#     key = derive_key(password, salt)
+#     f = Fernet(key)
+#     decrypted_message = f.decrypt(encrypted_message)
+#     return decrypted_message.decode()
+#
+# # Example usage:
+# password = "mysecretpassword"
+# message = "This is a secret message."
+#
+# encrypted_message = encrypt_message(message, password)
+# print("Encrypted:", encrypted_message)
+#
+# decrypted_message = decrypt_message(encrypted_message, password)
+# print("Decrypted:", decrypted_message)
+
+###############################################################################
+
+#todo
+#encrypt
+#symbols in password
+#split files and deal with scoping
+#error handling
+
+# def derive_key(password: str, salt: bytes) -> bytes:
+#     """Derive a key from a password and salt using PBKDF2."""
+#     kdf = PBKDF2HMAC(
+#         algorithm=hashes.SHA256(),
+#         length=32,
+#         salt=salt,
+#         iterations=100000,
+#     )
+#     return kdf.derive(password.encode())
+#
+# def encrypt_message(message: str, password: str) -> bytes:
+#     """Encrypt a message using a password."""
+#     salt = Fernet.generate_key()  # Generate a random salt
+#     key = derive_key(password, salt)
+#     f = Fernet(key)
+#     encrypted_message = f.encrypt(message.encode())
+#     return salt + encrypted_message
+#
+# def decrypt_message(encrypted_message: bytes, password: str) -> str:
+#     """Decrypt a message using a password."""
+#     salt = encrypted_message[:32]  # Extract the salt
+#     encrypted_message = encrypted_message[32:]
+#     key = derive_key(password, salt)
+#     f = Fernet(key)
+#     decrypted_message = f.decrypt(encrypted_message)
+#     return decrypted_message.decode()
+#
+# # Example usage:
+# password = "mysecretpassword"
+# message = "This is a secret message."
+#
+# encrypted_message = encrypt_message(message, password)
+# print("Encrypted:", encrypted_message)
+#
+# decrypted_message = decrypt_message(encrypted_message, password)
+# print("Decrypted:", decrypted_message)
