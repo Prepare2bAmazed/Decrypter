@@ -24,8 +24,7 @@ def new_password(app: AppState):
     welcome_options_menu(app)
 
 def welcome_options_menu(app: AppState):
-    print("Welcome to the app.\n"
-          + "Type a letter to select an option:\n"
+    print("Type a letter to select an option:\n"
           +"\t(T)ype in the password for this app\n"
           + "\t(E)rase all saved passwords and set a new password for this app"
           )
@@ -39,6 +38,8 @@ def welcome_options(string, app: AppState):
     if string == "E":
         new_password(app)
         return
+    print(string + " is not an option")
+    welcome_options_menu(app)
 
 def app_options_menu(app: AppState):
     print("Type a letter to select an option:\n"
@@ -128,3 +129,4 @@ def app_options(string, app: AppState):
         change_app_pw(app)
         return
     print(string + " is not an option")
+    app_options_menu(app)
